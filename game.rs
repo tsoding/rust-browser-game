@@ -37,7 +37,7 @@ pub fn get_display() -> *mut Display {
 #[no_mangle]
 pub fn next_frame(dt: f32) -> i32 {
     unsafe {
-        imported_func(69)
+        imported_func(420)
     }
 }
 
