@@ -16,7 +16,7 @@ It is assumed that you are using [rustup](https://rustup.rs/) for managing your 
 1. Make sure you have `wasm32-unknown-unknown` target installed:
 
 ```console
-$ rustup install target wasm32-unknown-unknown
+$ rustup target install wasm32-unknown-unknown
 ```
 
 2. Build the game
