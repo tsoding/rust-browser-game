@@ -55,6 +55,26 @@ pub struct Display {
     pixels: [[Pixel; WIDTH]; HEIGHT],
 }
 
+const fn max(x: i32, y: i32) -> i32 {
+    if x > y {
+        x
+    } else {
+        y
+    }
+}
+
+const fn min(x: i32, y: i32) -> i32 {
+    if x < y {
+        x
+    } else {
+        y
+    }
+}
+
+const fn clamp(x: i32, low: i32, high: i32) -> i32 {
+    min(max(low, x), high)
+}
+
 impl Display {
     fn fill(&mut self, pixel: Pixel) {
         for y in 0..HEIGHT {
@@ -65,12 +85,11 @@ impl Display {
     }
 
     fn fill_rect(&mut self, x0: i32, y0: i32, w: i32, h: i32, pixel: Pixel) {
-        assert!(WIDTH > 0);
-        assert!(HEIGHT > 0);
-        let x1 = x0.clamp(0, (WIDTH - 1) as i32) as usize;
-        let x2 = (x0 + w - 1).clamp(0, (WIDTH - 1) as i32) as usize;
-        let y1 = y0.clamp(0, (HEIGHT - 1) as i32) as usize;
-        let y2 = (y0 + h - 1).clamp(0, (HEIGHT - 1) as i32) as usize;
+        // TODO: something here blows up the size of the final executable
+        let x1 = clamp(x0,         0, (WIDTH - 1)  as i32) as usize;
+        let x2 = clamp(x0 + w - 1, 0, (WIDTH - 1)  as i32) as usize;
+        let y1 = clamp(y0,         0, (HEIGHT - 1) as i32) as usize;
+        let y2 = clamp(y0 + h - 1, 0, (HEIGHT - 1) as i32) as usize;
 
         for y in y1..=y2 {
             for x in x1..=x2 {
