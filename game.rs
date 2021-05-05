@@ -136,11 +136,21 @@ impl Entity {
         }
     }
 
-    fn contains(&self, x: i32, y: i32, size: i32) -> bool {
-        self.x - size / 2 <= x &&
-            x <= self.x + size / 2 &&
-            self.y - size / 2 <= y &&
-            y <= self.y + size / 2
+    fn overlaps(&self, self_size: i32, that: &Self, that_size: i32) -> bool {
+        let left1   = self.x - self_size / 2;
+        let right1  = self.x + self_size / 2;
+        let top1    = self.y - self_size / 2;
+        let bottom1 = self.y + self_size / 2;
+
+        let left2   = that.x - that_size / 2;
+        let right2  = that.x + that_size / 2;
+        let top2    = that.y - that_size / 2;
+        let bottom2 = that.y + that_size / 2;
+
+        right1 >= left2 &&
+            right2 >= left1 &&
+            bottom2 >= top1 &&
+            bottom1 >= top2
     }
 }
 
@@ -189,7 +199,7 @@ impl State {
                 if enemy.alive {
                     for bullet in self.bullets.iter_mut() {
                         if bullet.alive {
-                            if enemy.contains(bullet.x, bullet.y, ENEMY_SIZE) {
+                            if enemy.overlaps(ENEMY_SIZE, bullet, BULLET_SIZE) {
                                 enemy.alive = false;
                                 bullet.alive = false;
                                 self.score += PLAYER_KILL_REWARD;
