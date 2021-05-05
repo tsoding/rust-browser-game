@@ -29,28 +29,6 @@ const GREEN: Pixel = Pixel::rgba(0, 0xFF, 0, 0xFF);
 const BLUE: Pixel  = Pixel::rgba(0, 0, 0xFF, 0xFF);
 const BACKGROUND: Pixel = Pixel::rgba(18, 18, 18, 0xFF);
 
-#[derive(Copy, Clone)]
-struct RGBA {
-    r: f32,
-    g: f32,
-    b: f32,
-    a: f32,
-}
-
-impl RGBA {
-    fn new(r: f32, g: f32, b: f32, a: f32) -> Self {
-        Self {r, g, b, a}
-    }
-
-    fn to_pixel(self) -> Pixel {
-        Pixel::rgba(
-            (self.r * 255.0) as u8,
-            (self.g * 255.0) as u8,
-            (self.b * 255.0) as u8,
-            (self.a * 255.0) as u8)
-    }
-}
-
 pub struct Display {
     pixels: [Pixel; WIDTH * HEIGHT],
 }
@@ -116,9 +94,30 @@ pub struct State {
     dy: i32,
 }
 
+const RECT_WIDTH: i32 = 100;
+const RECT_HEIGHT: i32 = 100;
+
 impl State {
     fn update(&mut self, dt: Seconds) {
         self.time += dt;
+
+        const SPEED: i32 = 16;
+
+        if self.x < 0 || self.x + RECT_WIDTH > WIDTH as i32 {
+            self.dx = -self.dx;
+        }
+
+        if self.y < 0 || self.y + RECT_HEIGHT > HEIGHT as i32 {
+            self.dy = -self.dy;
+        }
+
+        self.x += self.dx * SPEED;
+        self.y += self.dy * SPEED;
+    }
+
+    fn render(&self, display: &mut Display) {
+        display.fill(BACKGROUND);
+        display.fill_rect(self.x, self.y, RECT_WIDTH, RECT_HEIGHT, RED);
     }
 }
 
@@ -141,34 +140,14 @@ pub fn get_display_height() -> usize {
 }
 
 #[no_mangle]
-pub fn get_display() -> *mut Display {
-    unsafe {
-        &mut DISPLAY
-    }
+pub unsafe fn get_display() -> &'static mut Display {
+    &mut DISPLAY
 }
 
 #[no_mangle]
-pub fn next_frame(dt: Seconds) {
-    unsafe {
-        STATE.update(dt);
-        DISPLAY.fill(BACKGROUND);
-
-        const SPEED: i32 = 16;
-        const RECT_WIDTH: i32 = 100;
-        const RECT_HEIGHT: i32 = 100;
-
-        if STATE.x < 0 || STATE.x + RECT_WIDTH > WIDTH as i32 {
-            STATE.dx = -STATE.dx;
-        }
-
-        if STATE.y < 0 || STATE.y + RECT_HEIGHT > HEIGHT as i32 {
-            STATE.dy = -STATE.dy;
-        }
-
-        STATE.x += STATE.dx * SPEED;
-        STATE.y += STATE.dy * SPEED;
-        DISPLAY.fill_rect(STATE.x, STATE.y, RECT_WIDTH, RECT_HEIGHT, RED);
-    }
+pub unsafe fn next_frame(dt: Seconds) {
+    STATE.update(dt);
+    STATE.render(&mut DISPLAY);
 }
 
 #[no_mangle]
