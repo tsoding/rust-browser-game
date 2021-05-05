@@ -106,6 +106,10 @@ impl Player {
     }
 }
 
+const BULLET_SIZE: i32 = 25;
+const BULLET_SPEED: i32 = 20;
+const BULLET_COLOR: Pixel = GREEN;
+
 #[derive(Clone, Copy)]
 #[repr(C)]
 struct Bullet {
@@ -113,10 +117,6 @@ struct Bullet {
     y: i32,
     alive: bool,
 }
-
-const BULLET_SIZE: i32 = 50;
-const BULLET_SPEED: i32 = 20;
-const BULLET_COLOR: Pixel = GREEN;
 
 impl Bullet {
     const fn dead() -> Self {
@@ -139,12 +139,31 @@ impl Bullet {
     }
 }
 
+#[derive(Copy, Clone)]
+struct Enemy {
+    x: i32,
+    y: i32,
+    alive: bool,
+}
+
+impl Enemy {
+    const fn dead() -> Self {
+        Self {
+            x: 0,
+            y: 0,
+            alive: false,
+        }
+    }
+}
+
 const BULLETS_CAPACITY: usize = 5;
+const ENEMIES_CAPACITY: usize = 69;
 
 pub struct State {
     time: Seconds,
     player: Player,
     bullets: [Bullet; BULLETS_CAPACITY],
+    enemies: [Enemy; ENEMIES_CAPACITY],
 }
 
 impl State {
@@ -188,6 +207,7 @@ static mut STATE: State = State {
     time: 0.0,
     player: Player{ x: 0, y: HEIGHT as i32 - PLAYER_SIZE },
     bullets: [Bullet::dead(); BULLETS_CAPACITY],
+    enemies: [Enemy::dead(); ENEMIES_CAPACITY],
 };
 
 #[no_mangle]
