@@ -10,6 +10,21 @@ fn panic(_panic: &PanicInfo<'_>) -> ! {
 
 const DISPLAY_WIDTH: usize = 800;
 const DISPLAY_HEIGHT: usize = 600;
+const DISPLAY_BACKGROUND: Pixel = Pixel::rgba(18, 18, 18, 0xFF);
+const PIXEL_RED: Pixel   = Pixel::rgba(0xFF, 0, 0, 0xFF);
+const PIXEL_GREEN: Pixel = Pixel::rgba(0, 0xFF, 0, 0xFF);
+const PIXEL_BLUE: Pixel  = Pixel::rgba(0, 0, 0xFF, 0xFF);
+const PLAYER_SIZE: i32 = 100;
+const PLAYER_COLOR: Pixel = PIXEL_RED;
+const BULLET_SIZE: i32 = 25;
+const BULLET_SPEED: i32 = 20;
+const BULLET_COLOR: Pixel = PIXEL_GREEN;
+const ENEMY_SIZE: i32 = 100;
+const ENEMY_COLOR: Pixel = PIXEL_BLUE;
+const ENEMY_SPEED: i32 = 10;
+const BULLETS_CAPACITY: usize = 5;
+const ENEMIES_CAPACITY: usize = 10;
+const ENEMY_SPAWN_PERIOD: Seconds = 1.0;
 
 #[derive(Clone, Copy)]
 #[repr(C)]
@@ -23,11 +38,6 @@ impl Pixel {
              ((r as u32) << (0 * 8)))
     }
 }
-
-const RED: Pixel   = Pixel::rgba(0xFF, 0, 0, 0xFF);
-const GREEN: Pixel = Pixel::rgba(0, 0xFF, 0, 0xFF);
-const BLUE: Pixel  = Pixel::rgba(0, 0, 0xFF, 0xFF);
-const BACKGROUND: Pixel = Pixel::rgba(18, 18, 18, 0xFF);
 
 pub struct Display {
     pixels: [Pixel; DISPLAY_WIDTH * DISPLAY_HEIGHT],
@@ -91,8 +101,6 @@ struct Player {
     y: i32,
 }
 
-const PLAYER_SIZE: i32 = 100;
-const PLAYER_COLOR: Pixel = RED;
 
 impl Player {
     fn render(&self, display: &mut Display) {
@@ -104,10 +112,6 @@ impl Player {
             PLAYER_COLOR);
     }
 }
-
-const BULLET_SIZE: i32 = 25;
-const BULLET_SPEED: i32 = 20;
-const BULLET_COLOR: Pixel = GREEN;
 
 #[derive(Clone, Copy)]
 #[repr(C)]
@@ -151,10 +155,6 @@ struct Enemy {
     alive: bool,
 }
 
-const ENEMY_SIZE: i32 = 100;
-const ENEMY_COLOR: Pixel = BLUE;
-const ENEMY_SPEED: i32 = 10;
-
 impl Enemy {
     const fn dead() -> Self {
         Self {
@@ -189,77 +189,76 @@ impl Enemy {
     }
 }
 
-const BULLETS_CAPACITY: usize = 5;
-const ENEMIES_CAPACITY: usize = 10;
-const ENEMY_SPAWN_PERIOD: Seconds = 1.0;
-
 pub struct State {
-    time: Seconds,
     player: Player,
     bullets: [Bullet; BULLETS_CAPACITY],
     enemies: [Enemy; ENEMIES_CAPACITY],
     enemy_spawn_cooldown: Seconds,
+    pause: bool,
 }
 
 impl State {
     const fn default() -> Self{
         Self {
-            time: 0.0,
             player: Player{ x: 0, y: DISPLAY_HEIGHT as i32 - PLAYER_SIZE },
             bullets: [Bullet::dead(); BULLETS_CAPACITY],
             enemies: [Enemy::dead(); ENEMIES_CAPACITY],
             enemy_spawn_cooldown: 0.0,
+            pause: false,
         }
     }
 
     fn update(&mut self, dt: Seconds) {
-        self.time += dt;
-        for bullet in self.bullets.iter_mut() {
-            if bullet.alive {
-                bullet.y -= BULLET_SPEED;
-                if bullet.y < 0 {
-                    bullet.alive = false
+        if !self.pause {
+            for bullet in self.bullets.iter_mut() {
+                if bullet.alive {
+                    bullet.y -= BULLET_SPEED;
+                    if bullet.y < 0 {
+                        bullet.alive = false
+                    }
                 }
             }
-        }
-        for enemy in self.enemies.iter_mut() {
-            if enemy.alive {
-                enemy.y += ENEMY_SPEED;
-                if enemy.y > DISPLAY_HEIGHT as i32 {
-                    enemy.alive = false
+            for enemy in self.enemies.iter_mut() {
+                if enemy.alive {
+                    enemy.y += ENEMY_SPEED;
+                    if enemy.y > DISPLAY_HEIGHT as i32 {
+                        enemy.alive = false
+                    }
                 }
             }
-        }
 
-        for enemy in self.enemies.iter_mut() {
-            if enemy.alive {
-                for bullet in self.bullets.iter_mut() {
-                    if bullet.alive {
-                        if enemy.overlap_bullet(&bullet) {
-                            enemy.alive = false;
-                            bullet.alive = false;
-                            break;
+            for enemy in self.enemies.iter_mut() {
+                if enemy.alive {
+                    for bullet in self.bullets.iter_mut() {
+                        if bullet.alive {
+                            if enemy.overlap_bullet(&bullet) {
+                                enemy.alive = false;
+                                bullet.alive = false;
+                                break;
+                            }
                         }
                     }
                 }
             }
-        }
 
-        self.enemy_spawn_cooldown -= dt;
-        if self.enemy_spawn_cooldown < 0.0 {
-            self.spawn_enemy(self.player.x, 0);
-            self.enemy_spawn_cooldown = ENEMY_SPAWN_PERIOD;
+            self.enemy_spawn_cooldown -= dt;
+            if self.enemy_spawn_cooldown < 0.0 {
+                self.spawn_enemy(self.player.x, 0);
+                self.enemy_spawn_cooldown = ENEMY_SPAWN_PERIOD;
+            }
         }
     }
 
     fn render(&self, display: &mut Display) {
-        display.fill(BACKGROUND);
-        self.player.render(display);
-        for bullet in self.bullets.iter() {
-            bullet.render(display)
-        }
-        for enemy in self.enemies.iter() {
-            enemy.render(display)
+        if !self.pause {
+            display.fill(DISPLAY_BACKGROUND);
+            self.player.render(display);
+            for bullet in self.bullets.iter() {
+                bullet.render(display)
+            }
+            for enemy in self.enemies.iter() {
+                enemy.render(display)
+            }
         }
     }
 
@@ -289,6 +288,10 @@ impl State {
         self.spawn_bullet(
             self.player.x,
             self.player.y - PLAYER_SIZE / 2 - BULLET_SIZE / 2);
+    }
+
+    fn toggle_pause(&mut self) {
+        self.pause = !self.pause
     }
 }
 
@@ -323,6 +326,11 @@ pub unsafe fn mouse_move(x: i32, y: i32) {
 #[no_mangle]
 pub unsafe fn mouse_click() {
     STATE.mouse_click();
+}
+
+#[no_mangle]
+pub unsafe fn toggle_pause() {
+    STATE.toggle_pause();
 }
 
 #[allow(dead_code)]

@@ -15,6 +15,12 @@ async function start() {
     const displaySize = displayWidth * displayHeight;
 
     const gameCanvas = document.getElementById("game-canvas");
+    document.addEventListener('keydown', e => {
+        console.log(e);
+        if (e.code === 'Space') {
+            game.instance.exports.toggle_pause();
+        }
+    });
     gameCanvas.addEventListener('mousemove', e => {
         game.instance.exports.mouse_move(e.offsetX, e.offsetY);
     });
