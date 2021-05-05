@@ -52,7 +52,7 @@ impl RGBA {
 }
 
 pub struct Display {
-    pixels: [[Pixel; WIDTH]; HEIGHT],
+    pixels: [Pixel; WIDTH * HEIGHT],
 }
 
 const fn max(x: i32, y: i32) -> i32 {
@@ -77,23 +77,26 @@ const fn clamp(x: i32, low: i32, high: i32) -> i32 {
 
 impl Display {
     fn fill(&mut self, pixel: Pixel) {
-        for y in 0..HEIGHT {
-            for x in 0..WIDTH {
-                self.pixels[y][x] = pixel;
+        unsafe {
+            for y in 0..HEIGHT {
+                for x in 0..WIDTH {
+                    *self.pixels.get_unchecked_mut(y * WIDTH + x) = pixel;
+                }
             }
         }
     }
 
     fn fill_rect(&mut self, x0: i32, y0: i32, w: i32, h: i32, pixel: Pixel) {
-        // TODO: something here blows up the size of the final executable
         let x1 = clamp(x0,         0, (WIDTH - 1)  as i32) as usize;
         let x2 = clamp(x0 + w - 1, 0, (WIDTH - 1)  as i32) as usize;
         let y1 = clamp(y0,         0, (HEIGHT - 1) as i32) as usize;
         let y2 = clamp(y0 + h - 1, 0, (HEIGHT - 1) as i32) as usize;
 
-        for y in y1..=y2 {
-            for x in x1..=x2 {
-                self.pixels[y][x] = pixel;
+        unsafe {
+            for y in y1..=y2 {
+                for x in x1..=x2 {
+                    *self.pixels.get_unchecked_mut(y * WIDTH + x) = pixel;
+                }
             }
         }
     }
@@ -102,7 +105,7 @@ impl Display {
 type Seconds = f32;
 
 static mut DISPLAY: Display = Display {
-    pixels: [[Pixel(0); WIDTH]; HEIGHT]
+    pixels: [Pixel(0); WIDTH * HEIGHT]
 };
 
 pub struct State {
