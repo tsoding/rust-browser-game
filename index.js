@@ -18,6 +18,9 @@ async function start() {
     gameCanvas.addEventListener('mousemove', e => {
         game.instance.exports.mouse_move(e.offsetX, e.offsetY);
     });
+    gameCanvas.addEventListener('mousedown', e => {
+        game.instance.exports.mouse_click();
+    });
 
     const ctx = gameCanvas.getContext('2d');
 
