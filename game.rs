@@ -37,6 +37,7 @@ impl Pixel {
     }
 }
 
+#[repr(C)]
 pub struct Display {
     pixels: [Pixel; DISPLAY_WIDTH * DISPLAY_HEIGHT],
 }
@@ -94,81 +95,27 @@ static mut DISPLAY: Display = Display {
     pixels: [Pixel(0); DISPLAY_WIDTH * DISPLAY_HEIGHT]
 };
 
-struct Player {
-    x: i32,
-    y: i32,
-}
-
-impl Player {
-    fn render(&self, display: &mut Display) {
-        display.fill_rect(
-            self.x - PLAYER_SIZE / 2,
-            self.y - PLAYER_SIZE / 2,
-            PLAYER_SIZE,
-            PLAYER_SIZE,
-            PLAYER_COLOR);
-    }
-}
-
-#[derive(Clone, Copy)]
-#[repr(C)]
-struct Bullet {
-    x: i32,
-    y: i32,
-    alive: bool,
-}
-
-impl Bullet {
-    const fn dead() -> Self {
-        Self {
-            x: 0,
-            y: 0,
-            alive: false,
-        }
-    }
-
-    fn revive(&mut self, x: i32, y: i32) {
-        self.alive = true;
-        self.x = x;
-        self.y = y;
-    }
-
-    fn render(&self, display: &mut Display) {
-        if self.alive {
-            display.fill_rect(
-                self.x - BULLET_SIZE / 2,
-                self.y - BULLET_SIZE / 2,
-                BULLET_SIZE,
-                BULLET_SIZE,
-                BULLET_COLOR);
-        }
-    }
-}
-
 #[derive(Copy, Clone)]
-struct Enemy {
+#[repr(C)]
+struct Entity {
     x: i32,
     y: i32,
     alive: bool,
 }
 
-impl Enemy {
+impl Entity {
+    const fn new(x: i32, y: i32) -> Self {
+        Self {
+            x, y,
+            alive: true,
+        }
+    }
+
     const fn dead() -> Self {
         Self {
             x: 0,
             y: 0,
             alive: false,
-        }
-    }
-
-    fn render(&self, display: &mut Display) {
-        if self.alive {
-            display.fill_rect(
-                self.x - ENEMY_SIZE / 2,
-                self.y - ENEMY_SIZE / 2,
-                ENEMY_SIZE,
-                ENEMY_SIZE,
-                ENEMY_COLOR);
         }
     }
 
@@ -178,18 +125,30 @@ impl Enemy {
         self.y = y;
     }
 
-    fn overlap_bullet(&self, bullet: &Bullet) -> bool {
-        self.x - ENEMY_SIZE / 2 <= bullet.x &&
-            bullet.x <= self.x + ENEMY_SIZE / 2 &&
-            self.y - ENEMY_SIZE / 2 <= bullet.y &&
-            bullet.y <= self.y + ENEMY_SIZE / 2
+    fn render(&self, display: &mut Display, size: i32, color: Pixel) {
+        if self.alive {
+            display.fill_rect(
+                self.x - size / 2,
+                self.y - size / 2,
+                size,
+                size,
+                color);
+        }
+    }
+
+    fn contains(&self, x: i32, y: i32, size: i32) -> bool {
+        self.x - size / 2 <= x &&
+            x <= self.x + size / 2 &&
+            self.y - size / 2 <= y &&
+            y <= self.y + size / 2
     }
 }
 
+#[repr(C)]
 pub struct State {
-    player: Player,
-    bullets: [Bullet; BULLETS_CAPACITY],
-    enemies: [Enemy; ENEMIES_CAPACITY],
+    player: Entity,
+    bullets: [Entity; BULLETS_CAPACITY],
+    enemies: [Entity; ENEMIES_CAPACITY],
     enemy_spawn_cooldown: Seconds,
     pause: bool,
     score: usize,
@@ -198,9 +157,9 @@ pub struct State {
 impl State {
     const fn default() -> Self{
         Self {
-            player: Player{ x: 0, y: DISPLAY_HEIGHT as i32 - PLAYER_SIZE },
-            bullets: [Bullet::dead(); BULLETS_CAPACITY],
-            enemies: [Enemy::dead(); ENEMIES_CAPACITY],
+            player: Entity::new(0, DISPLAY_HEIGHT as i32 - PLAYER_SIZE),
+            bullets: [Entity::dead(); BULLETS_CAPACITY],
+            enemies: [Entity::dead(); ENEMIES_CAPACITY],
             enemy_spawn_cooldown: 0.0,
             pause: false,
             score: 0,
@@ -230,7 +189,7 @@ impl State {
                 if enemy.alive {
                     for bullet in self.bullets.iter_mut() {
                         if bullet.alive {
-                            if enemy.overlap_bullet(&bullet) {
+                            if enemy.contains(bullet.x, bullet.y, ENEMY_SIZE) {
                                 enemy.alive = false;
                                 bullet.alive = false;
                                 self.score += PLAYER_KILL_REWARD;
@@ -252,12 +211,12 @@ impl State {
     fn render(&self, display: &mut Display) {
         if !self.pause {
             display.fill(DISPLAY_BACKGROUND);
-            self.player.render(display);
+            self.player.render(display, PLAYER_SIZE, PLAYER_COLOR);
             for bullet in self.bullets.iter() {
-                bullet.render(display)
+                bullet.render(display, BULLET_SIZE, BULLET_COLOR)
             }
             for enemy in self.enemies.iter() {
-                enemy.render(display)
+                enemy.render(display, ENEMY_SIZE, ENEMY_COLOR)
             }
         }
     }
