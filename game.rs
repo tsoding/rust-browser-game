@@ -10,18 +10,18 @@ fn panic(_panic: &PanicInfo<'_>) -> ! {
 
 const DISPLAY_WIDTH: usize = 800;
 const DISPLAY_HEIGHT: usize = 600;
-const DISPLAY_BACKGROUND: Pixel = Pixel::rgba(18, 18, 18, 0xFF);
+const DISPLAY_BACKGROUND: Pixel = Pixel::rgba(0x3F, 0x3F, 0x3F, 0xFF);
 const PIXEL_RED: Pixel   = Pixel::rgba(0xFF, 0, 0, 0xFF);
 const PIXEL_GREEN: Pixel = Pixel::rgba(0, 0xFF, 0, 0xFF);
 const PIXEL_BLUE: Pixel  = Pixel::rgba(0, 0, 0xFF, 0xFF);
-const PLAYER_SIZE: i32 = 100;
-const PLAYER_COLOR: Pixel = PIXEL_RED;
+const PLAYER_SIZE: i32 = 80;
+const PLAYER_COLOR: Pixel =  Pixel::rgba(0xDF, 0xAF, 0x8F, 0xFF);
 const BULLET_SIZE: i32 = 25;
 const BULLET_SPEED: i32 = 20;
-const BULLET_COLOR: Pixel = PIXEL_GREEN;
+const BULLET_COLOR: Pixel = Pixel::rgba(0xEC, 0xB3, 0xB3, 0xFF);
 const ENEMY_SIZE: i32 = 100;
-const ENEMY_COLOR: Pixel = PIXEL_BLUE;
-const ENEMY_SPEED: i32 = 10;
+const ENEMY_COLOR: Pixel = Pixel::rgba(0x7C, 0xB8, 0xBB, 0xFF);
+const ENEMY_SPEED: i32 = 5;
 const BULLETS_CAPACITY: usize = 5;
 const ENEMIES_CAPACITY: usize = 10;
 const ENEMY_SPAWN_PERIOD: Seconds = 1.0;
