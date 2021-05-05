@@ -15,6 +15,10 @@ async function start() {
     const displaySize = displayWidth * displayHeight;
 
     const gameCanvas = document.getElementById("game-canvas");
+    gameCanvas.addEventListener('mousemove', e => {
+        game.instance.exports.mouse_move(e.offsetX, e.offsetY);
+    });
+
     const ctx = gameCanvas.getContext('2d');
 
     let start;

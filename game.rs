@@ -86,47 +86,50 @@ static mut DISPLAY: Display = Display {
     pixels: [Pixel(0); WIDTH * HEIGHT]
 };
 
-pub struct State {
-    time: Seconds,
+struct Player {
     x: i32,
     y: i32,
-    dx: i32,
-    dy: i32,
 }
 
-const RECT_WIDTH: i32 = 100;
-const RECT_HEIGHT: i32 = 100;
+const PLAYER_WIDTH: i32 = 100;
+const PLAYER_HEIGHT: i32 = 100;
+const PLAYER_COLOR: Pixel = RED;
+const PLAYER_SPEED: i32 = 16;
+
+impl Player {
+    fn render(&self, display: &mut Display) {
+        display.fill_rect(
+            self.x - PLAYER_WIDTH / 2,
+            self.y - PLAYER_HEIGHT / 2,
+            PLAYER_WIDTH,
+            PLAYER_HEIGHT,
+            PLAYER_COLOR);
+    }
+}
+
+pub struct State {
+    time: Seconds,
+    player: Player,
+}
 
 impl State {
     fn update(&mut self, dt: Seconds) {
         self.time += dt;
-
-        const SPEED: i32 = 16;
-
-        if self.x < 0 || self.x + RECT_WIDTH > WIDTH as i32 {
-            self.dx = -self.dx;
-        }
-
-        if self.y < 0 || self.y + RECT_HEIGHT > HEIGHT as i32 {
-            self.dy = -self.dy;
-        }
-
-        self.x += self.dx * SPEED;
-        self.y += self.dy * SPEED;
     }
 
     fn render(&self, display: &mut Display) {
         display.fill(BACKGROUND);
-        display.fill_rect(self.x, self.y, RECT_WIDTH, RECT_HEIGHT, RED);
+        self.player.render(display);
+    }
+
+    fn mouse_move(&mut self, x: i32, _y: i32) {
+        self.player.x = x;
     }
 }
 
 static mut STATE: State = State {
     time: 0.0,
-    x: 10,
-    y: 10,
-    dx: 1,
-    dy: 1,
+    player: Player{ x: 0, y: HEIGHT as i32 - PLAYER_HEIGHT },
 };
 
 #[no_mangle]
@@ -151,11 +154,8 @@ pub unsafe fn next_frame(dt: Seconds) {
 }
 
 #[no_mangle]
-pub fn move_right() {
-}
-
-#[no_mangle]
-pub fn move_left() {
+pub unsafe fn mouse_move(x: i32, y: i32) {
+    STATE.mouse_move(x, y);
 }
 
 #[allow(dead_code)]
