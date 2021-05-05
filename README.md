@@ -11,7 +11,7 @@ We still use a little bit of JavaScript to
 
 **WARNING! The Game is NOT FINISHED yet!**
 
-## Main Idea
+## Main Technical Idea
 
 The entire logic of the game is contained within the `game.wasm` module that renders the frames of the game into its own memory. The JavaScript part of the applications (`index.js`) constantly takes those frames directly from the memory, puts them into [ImageData](https://developer.mozilla.org/en-US/docs/Web/API/ImageData) and displays them on the [HTML5 Canvas](https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API).
 
@@ -46,3 +46,9 @@ $ rustup target install wasm32-unknown-unknown
 ```console
 $ make -B
 ```
+
+## Game Controls
+
+- Mouse mouse cursor to position the player
+- Click to shoot
+- <kbd>SPACE</kbd> to toggle pause
