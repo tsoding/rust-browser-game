@@ -13,6 +13,7 @@ const DISPLAY_HEIGHT: usize       = 600;
 const DISPLAY_BACKGROUND: Pixel   = Pixel::rgba(0x3F, 0x3F, 0x3F, 0xFF);
 const PLAYER_SIZE: i32            = 80;
 const PLAYER_COLOR: Pixel         = Pixel::rgba(0xDF, 0xAF, 0x8F, 0xFF);
+const PLAYER_KILL_REWARD: usize   = 100;
 const BULLET_SIZE: i32            = 25;
 const BULLET_SPEED: i32           = 20;
 const BULLET_COLOR: Pixel         = Pixel::rgba(0xEC, 0xB3, 0xB3, 0xFF);
@@ -97,7 +98,6 @@ struct Player {
     x: i32,
     y: i32,
 }
-
 
 impl Player {
     fn render(&self, display: &mut Display) {
@@ -192,6 +192,7 @@ pub struct State {
     enemies: [Enemy; ENEMIES_CAPACITY],
     enemy_spawn_cooldown: Seconds,
     pause: bool,
+    score: usize,
 }
 
 impl State {
@@ -202,6 +203,7 @@ impl State {
             enemies: [Enemy::dead(); ENEMIES_CAPACITY],
             enemy_spawn_cooldown: 0.0,
             pause: false,
+            score: 0,
         }
     }
 
@@ -231,6 +233,7 @@ impl State {
                             if enemy.overlap_bullet(&bullet) {
                                 enemy.alive = false;
                                 bullet.alive = false;
+                                self.score += PLAYER_KILL_REWARD;
                                 break;
                             }
                         }
