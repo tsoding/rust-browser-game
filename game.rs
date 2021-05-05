@@ -208,6 +208,14 @@ impl State {
                         }
                     }
                 }
+
+                // Enemy could be killed by the bullet in the previous
+                // condition. So we need to check if it's alive again.
+                if enemy.alive {
+                    if enemy.overlaps(ENEMY_SIZE, &self.player, PLAYER_SIZE) {
+                        self.player.alive = false;
+                    }
+                }
             }
 
             self.enemy_spawn_cooldown -= dt;
@@ -250,13 +258,17 @@ impl State {
     }
 
     fn mouse_move(&mut self, x: i32, _y: i32) {
-        self.player.x = x;
+        if self.player.alive {
+            self.player.x = x;
+        }
     }
 
     fn mouse_click(&mut self) {
-        self.spawn_bullet(
-            self.player.x,
-            self.player.y - PLAYER_SIZE / 2 - BULLET_SIZE / 2);
+        if self.player.alive {
+            self.spawn_bullet(
+                self.player.x,
+                self.player.y - PLAYER_SIZE / 2 - BULLET_SIZE / 2);
+        }
     }
 
     fn toggle_pause(&mut self) {
