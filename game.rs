@@ -27,6 +27,13 @@ const BULLETS_CAPACITY: usize = 5;
 const ENEMIES_CAPACITY: usize = 10;
 const ENEMY_SPAWN_PERIOD: Seconds = 1.0;
 // Generated from `./charmap-oldschool_white.png`
+const FONT_IMAGE_WIDTH: usize = 128;
+const FONT_IMAGE_HEIGHT: usize = 64;
+const FONT_IMAGE_COLS: usize = 18;
+const FONT_IMAGE_ROWS: usize = 7;
+const FONT_CHAR_WIDTH: usize = FONT_IMAGE_WIDTH / FONT_IMAGE_COLS;
+const FONT_CHAR_HEIGHT: usize = FONT_IMAGE_HEIGHT / FONT_IMAGE_ROWS;
+const BITS_IN_BYTE: usize = 8;
 const COMPRESSED_FONT: [u8; 622] = [
     0x00, 0x11, 0x20, 0xa1, 0x41, 0x0c, 0x0e, 0x08, 0x08, 0x40, 0x00, 0x05, 0x38, 0x20, 0x00, 0x01,
     0x20, 0xa1, 0x43, 0xcc, 0x92, 0x08, 0x10, 0x21, 0x50, 0x80, 0x00, 0x02, 0x02, 0x44, 0x60, 0x00,
@@ -194,15 +201,6 @@ impl Entity {
     }
 }
 
-const FONT_IMAGE_WIDTH: usize = 128;
-const FONT_IMAGE_HEIGHT: usize = 64;
-const FONT_IMAGE_COLS: usize = 18;
-const FONT_IMAGE_ROWS: usize = 7;
-const FONT_CHAR_WIDTH: usize = FONT_IMAGE_WIDTH / FONT_IMAGE_COLS;
-const FONT_CHAR_HEIGHT: usize = FONT_IMAGE_HEIGHT / FONT_IMAGE_ROWS;
-
-const CHUNK_SIZE: usize = 8;
-
 struct Font {
     pixels: [u8; FONT_IMAGE_WIDTH * FONT_IMAGE_HEIGHT],
 }
@@ -220,10 +218,10 @@ impl Font {
                 pixels_size += unsafe {*bytes.get_unchecked(i) as usize} * 8;
                 i += 1;
             } else {
-                for bit_index in 0..CHUNK_SIZE {
+                for bit_index in 0..BITS_IN_BYTE {
                     unsafe {
                         *self.pixels.get_unchecked_mut(pixels_size) =
-                            ((byte >> (CHUNK_SIZE - bit_index - 1)) & 1) * 0xFF;
+                            ((byte >> (BITS_IN_BYTE - bit_index - 1)) & 1) * 0xFF;
                     }
                     pixels_size += 1;
                 }
