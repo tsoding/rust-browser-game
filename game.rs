@@ -24,8 +24,8 @@ const SCORE_LABEL_COLOR: Pixel = Pixel::rgba(0xDC, 0xDC, 0xCC, 0xFF);
 const SCORE_LABEL_PADDING: i32 = 17;
 const SCORE_LABEL_X: i32 = SCORE_LABEL_PADDING;
 const SCORE_LABEL_Y: i32 = SCORE_LABEL_PADDING;
-const TEXT_SHADOW_COLOR: Pixel = Pixel::rgba(0, 0, 0, 0xFF);
-const TEXT_SHADOW_OFFSET: i32 = 3;
+const SHADOW_COLOR: Pixel = Pixel::rgba(0x2B, 0x2B, 0x2B, 0xFF);
+const SHADOW_OFFSET: i32 = 4;
 const BULLETS_CAPACITY: usize = 5;
 const ENEMIES_CAPACITY: usize = 10;
 const ENEMY_SPAWN_PERIOD: Seconds = 1.0;
@@ -199,7 +199,10 @@ impl Entity {
 
     fn render(&self, display: &mut Display, size: i32, color: Pixel) {
         if self.alive {
-            display.fill_rect(self.x - size / 2, self.y - size / 2, size, size, color);
+            let x = self.x - size / 2;
+            let y = self.y - size / 2;
+            display.fill_rect(x - SHADOW_OFFSET, y - SHADOW_OFFSET, size, size, SHADOW_COLOR);
+            display.fill_rect(x, y, size, size, color);
         }
     }
 
@@ -460,13 +463,13 @@ impl State {
             }
 
             self.label.render(display, font,
+                              SCORE_LABEL_X - SHADOW_OFFSET,
+                              SCORE_LABEL_Y - SHADOW_OFFSET,
+                              4,
+                              SHADOW_COLOR);
+            self.label.render(display, font,
                               SCORE_LABEL_X,
                               SCORE_LABEL_Y,
-                              4,
-                              TEXT_SHADOW_COLOR);
-            self.label.render(display, font,
-                              SCORE_LABEL_X + TEXT_SHADOW_OFFSET,
-                              SCORE_LABEL_Y + TEXT_SHADOW_OFFSET,
                               4,
                               SCORE_LABEL_COLOR);
         }
@@ -569,7 +572,6 @@ extern "C" {
 // TODO: spawn enemies completely outside of the screen
 // TODO: copyright at the bottom of the screen
 // TODO: player's health
-// TODO: shadows for all of the things
 // TODO: game over sign
 // TODO: pause sign
 // TODO: increasing rate of spawning
