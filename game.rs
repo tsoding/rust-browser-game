@@ -121,12 +121,8 @@ const fn clamp(x: i32, low: i32, high: i32) -> i32 {
 
 impl Display {
     fn fill(&mut self, pixel: Pixel) {
-        for y in 0..DISPLAY_HEIGHT {
-            for x in 0..DISPLAY_WIDTH {
-                unsafe {
-                    *self.pixels.get_unchecked_mut(y * DISPLAY_WIDTH + x) = pixel;
-                }
-            }
+        for pixel_ref in self.pixels.iter_mut() {
+            *pixel_ref = pixel;
         }
     }
 
@@ -136,20 +132,19 @@ impl Display {
         let y1 = clamp(y0, 0, (DISPLAY_HEIGHT - 1) as i32) as usize;
         let y2 = clamp(y0 + h - 1, 0, (DISPLAY_HEIGHT - 1) as i32) as usize;
 
-        unsafe {
-            for y in y1..=y2 {
-                for x in x1..=x2 {
-                    *self.pixels.get_unchecked_mut(y * DISPLAY_WIDTH + x) = pixel;
+        for y in y1..=y2 {
+            for x in x1..=x2 {
+                if let Some(pixel_ref) = self.pixels.get_mut(y * DISPLAY_WIDTH + x) {
+                    *pixel_ref = pixel
                 }
             }
         }
     }
 
     fn put(&mut self, x: i32, y: i32, pixel: Pixel) {
-        if 0 <= x && x < DISPLAY_WIDTH as i32 && 0 <= y && y < DISPLAY_HEIGHT as i32 {
-            unsafe {
-                *self.pixels.get_unchecked_mut(y as usize * DISPLAY_WIDTH + x as usize) = pixel;
-            }
+        let index = y as usize * DISPLAY_WIDTH + x as usize;
+        if let Some(pixel_ref) = self.pixels.get_mut(index) {
+            *pixel_ref = pixel;
         }
     }
 }
@@ -234,13 +229,7 @@ impl Font {
     }
 
     fn get(&self, x: i32, y: i32) -> Option<&u8> {
-        if 0 <= x && x < FONT_IMAGE_WIDTH as i32 && 0 <= y && y < FONT_IMAGE_HEIGHT as i32 {
-            unsafe {
-                Some(self.pixels.get_unchecked(y as usize * FONT_IMAGE_WIDTH + x as usize))
-            }
-        } else {
-            None
-        }
+        self.pixels.get(y as usize * FONT_IMAGE_WIDTH + x as usize)
     }
 
     fn render_ascii(&self,
@@ -297,14 +286,16 @@ impl Label {
               x: i32, y: i32,
               scale: i32,
               color: Pixel) {
-        if self.count < LABEL_CAPACITY {
+        if self.count <= LABEL_CAPACITY {
             for i in 0..self.count {
-                font.render_ascii(
-                    display,
-                    unsafe { *self.chars.get_unchecked(i) },
-                    x + i as i32 * FONT_CHAR_WIDTH as i32 * scale, y,
-                    scale,
-                    color);
+                if let Some(c) = self.chars.get(i) {
+                    font.render_ascii(
+                        display,
+                        *c,
+                        x + i as i32 * FONT_CHAR_WIDTH as i32 * scale, y,
+                        scale,
+                        color);
+                }
             }
         }
     }
@@ -314,10 +305,8 @@ impl Label {
     }
 
     fn push_byte(&mut self, b: u8) {
-        if self.count < LABEL_CAPACITY {
-            unsafe {
-                *self.chars.get_unchecked_mut(self.count) = b;
-            }
+        if let Some(char_ref) = self.chars.get_mut(self.count) {
+            *char_ref = b;
             self.count += 1;
         }
     }
@@ -346,19 +335,8 @@ impl Label {
             }
         }
 
-        let mut a = saved_count;
-        let mut b = self.count - 1;
-
-        while a < b {
-            unsafe {
-                let t = *self.chars.get_unchecked_mut(a);
-                *self.chars.get_unchecked_mut(a) =
-                    *self.chars.get_unchecked_mut(b);
-                *self.chars.get_unchecked_mut(b) = t;
-            }
-
-            a += 1;
-            b -= 1;
+        if let Some(chars) = self.chars.get_mut(saved_count .. self.count - 1) {
+            chars.reverse();
         }
     }
 }
