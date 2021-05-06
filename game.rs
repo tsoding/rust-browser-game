@@ -21,6 +21,9 @@ const ENEMY_SIZE: i32 = 100;
 const ENEMY_COLOR: Pixel = Pixel::rgba(0x7C, 0xB8, 0xBB, 0xFF);
 const ENEMY_SPEED: i32 = 5;
 const SCORE_LABEL_COLOR: Pixel = Pixel::rgba(0xDC, 0xDC, 0xCC, 0xFF);
+const SCORE_LABEL_PADDING: i32 = 17;
+const SCORE_LABEL_X: i32 = SCORE_LABEL_PADDING;
+const SCORE_LABEL_Y: i32 = SCORE_LABEL_PADDING;
 const TEXT_SHADOW_COLOR: Pixel = Pixel::rgba(0, 0, 0, 0xFF);
 const TEXT_SHADOW_OFFSET: i32 = 3;
 const BULLETS_CAPACITY: usize = 5;
@@ -450,10 +453,14 @@ impl State {
             }
 
             self.label.render(display, font,
-                              0, 0, 4,
+                              SCORE_LABEL_X,
+                              SCORE_LABEL_Y,
+                              4,
                               TEXT_SHADOW_COLOR);
             self.label.render(display, font,
-                              TEXT_SHADOW_OFFSET, TEXT_SHADOW_OFFSET, 4,
+                              SCORE_LABEL_X + TEXT_SHADOW_OFFSET,
+                              SCORE_LABEL_Y + TEXT_SHADOW_OFFSET,
+                              4,
                               SCORE_LABEL_COLOR);
         }
     }
