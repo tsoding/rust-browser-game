@@ -29,7 +29,6 @@ const SHADOW_OFFSET: i32 = 4;
 const BULLETS_CAPACITY: usize = 5;
 const ENEMIES_CAPACITY: usize = 10;
 const ENEMY_SPAWN_PERIOD: Seconds = 1.0;
-// Generated from `./charmap-oldschool_white.png`
 const FONT_IMAGE_WIDTH: usize = 128;
 const FONT_IMAGE_HEIGHT: usize = 64;
 const FONT_IMAGE_COLS: usize = 18;
@@ -40,6 +39,7 @@ const BITS_IN_BYTE: usize = 8;
 const COPYRIGHT_TEXT: &[u8] = b"Made by Tsoding";
 const COPYRIGHT_SCALE: i32 = 2;
 const COPYRIGHT_PADDING: usize = 10;
+// Generated from `./charmap-oldschool_white.png`
 const COMPRESSED_FONT: [u8; 622] = [
     0x00, 0x11, 0x20, 0xa1, 0x41, 0x0c, 0x0e, 0x08, 0x08, 0x40, 0x00, 0x05, 0x38, 0x20, 0x00, 0x01,
     0x20, 0xa1, 0x43, 0xcc, 0x92, 0x08, 0x10, 0x21, 0x50, 0x80, 0x00, 0x02, 0x02, 0x44, 0x60, 0x00,
