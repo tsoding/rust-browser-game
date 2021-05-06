@@ -132,11 +132,9 @@ const fn clamp(x: i32, low: i32, high: i32) -> i32 {
 
 impl Display {
     fn fill(&mut self, pixel: Pixel) {
-        unsafe {
-            for y in 0..DISPLAY_HEIGHT {
-                for x in 0..DISPLAY_WIDTH {
-                    *self.pixels.get_unchecked_mut(y * DISPLAY_WIDTH + x) = pixel;
-                }
+        for y in 0..DISPLAY_HEIGHT {
+            for x in 0..DISPLAY_WIDTH {
+                self.pixels[y * DISPLAY_WIDTH + x] = pixel;
             }
         }
     }
@@ -153,6 +151,12 @@ impl Display {
                     *self.pixels.get_unchecked_mut(y * DISPLAY_WIDTH + x) = pixel;
                 }
             }
+        }
+    }
+
+    fn put(&mut self, x: i32, y: i32, pixel: Pixel) {
+        if 0 <= x && x < DISPLAY_WIDTH as i32 && 0 <= y && y < DISPLAY_HEIGHT as i32 {
+            self.pixels[y as usize * DISPLAY_WIDTH + x as usize] = pixel;
         }
     }
 }
@@ -207,13 +211,18 @@ impl Entity {
     }
 }
 
-const IMAGE_WIDTH: usize = 128;
-const IMAGE_HEIGHT: usize = 64;
+const FONT_IMAGE_WIDTH: usize = 128;
+const FONT_IMAGE_HEIGHT: usize = 64;
+const FONT_IMAGE_COLS: usize = 18;
+const FONT_IMAGE_ROWS: usize = 7;
+const FONT_CHAR_WIDTH: usize = FONT_IMAGE_WIDTH / FONT_IMAGE_COLS;
+const FONT_CHAR_HEIGHT: usize = FONT_IMAGE_HEIGHT / FONT_IMAGE_ROWS;
+
 const CHUNK_SIZE: usize = 8;
-const CHUNK_COUNT: usize = IMAGE_WIDTH * IMAGE_HEIGHT / CHUNK_SIZE;
+const CHUNK_COUNT: usize = FONT_IMAGE_WIDTH * FONT_IMAGE_HEIGHT / CHUNK_SIZE;
 
 struct Font {
-    pixels: [u8; IMAGE_WIDTH * IMAGE_HEIGHT],
+    pixels: [u8; FONT_IMAGE_WIDTH * FONT_IMAGE_HEIGHT],
 }
 
 impl Font {
@@ -225,6 +234,61 @@ impl Font {
                     ((chunk >> (CHUNK_SIZE - bit_index - 1)) & 1) * 0xFF;
             }
         }
+    }
+
+    fn get(&self, x: i32, y: i32) -> Option<&u8> {
+        if 0 <= x && x < FONT_IMAGE_WIDTH as i32 && 0 <= y && y < FONT_IMAGE_HEIGHT as i32 {
+            Some(&self.pixels[y as usize * FONT_IMAGE_WIDTH + x as usize])
+        } else {
+            None
+        }
+    }
+
+    fn render_ascii(&self,
+                    display: &mut Display,
+                    code: u8,
+                    start_x: i32, start_y: i32,
+                    scale: i32,
+                    color: Pixel) {
+        if 32 <= code && code <= 126 {
+            let char_x = (code - 32) as usize % FONT_IMAGE_COLS;
+            let char_y = (code - 32) as usize / FONT_IMAGE_COLS;
+
+            for y in 0..FONT_CHAR_HEIGHT as i32 {
+                for x in 0..FONT_CHAR_WIDTH as i32 {
+                    for scale_x in 0..scale {
+                        for scale_y in 0..scale {
+                            let font_x = char_x as i32 * FONT_CHAR_WIDTH as i32 + x;
+                            let font_y = char_y as i32 * FONT_CHAR_HEIGHT as i32 + y;
+                            let display_x = start_x + x * scale + scale_x;
+                            let display_y = start_y + y * scale + scale_y;
+
+                            if let Some(alpha) = self.get(font_x, font_y) {
+                                if *alpha == 0xFF {
+                                    display.put(display_x, display_y, color);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        } else {
+            self.render_ascii(display, '?' as u8, start_x, start_y, scale, color)
+        }
+    }
+
+    fn render_char(&self, display: &mut Display, c: char,
+                   x: i32, y: i32,
+                   scale: i32,
+                   color: Pixel) {
+        if c.is_ascii() {
+            self.render_ascii(display, c as u8, x, y, scale, color)
+        } else {
+            self.render_ascii(display, '?' as u8, x, y, scale, color)
+        }
+    }
+
+    fn render_str(&self, display: &mut Display, s: &str) {
     }
 }
 
@@ -302,7 +366,7 @@ impl State {
 
     fn render(&self, display: &mut Display, font: &Font) {
         if !self.pause {
-            display.fill(Pixel::rgba(font.pixels[0], 0, 0, 0));
+            display.fill(DISPLAY_BACKGROUND);
             self.player.render(display, PLAYER_SIZE, PLAYER_COLOR);
             for bullet in self.bullets.iter() {
                 bullet.render(display, BULLET_SIZE, BULLET_COLOR)
@@ -310,6 +374,11 @@ impl State {
             for enemy in self.enemies.iter() {
                 enemy.render(display, ENEMY_SIZE, ENEMY_COLOR)
             }
+
+            font.render_char(
+                display, 'e',
+                0, 0, 16,
+                Pixel::rgba(255, 0, 0, 255));
         }
     }
 
