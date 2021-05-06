@@ -284,31 +284,90 @@ impl Font {
             self.render_ascii(display, '?' as u8, start_x, start_y, scale, color)
         }
     }
+}
 
-    fn render_char(&self, display: &mut Display,
-                   c: char,
-                   x: i32, y: i32,
-                   scale: i32,
-                   color: Pixel) {
-        if c.is_ascii() {
-            self.render_ascii(display, c as u8, x, y, scale, color);
-        } else {
-            self.render_ascii(display, '?' as u8, x, y, scale, color);
+const LABEL_CAPACITY: usize = 64;
+struct Label {
+    chars: [u8; LABEL_CAPACITY],
+    count: usize,
+}
+
+impl Label {
+    const fn empty() -> Self {
+        Self {
+            chars: [0; LABEL_CAPACITY],
+            count: 0,
         }
     }
 
-    fn render_str(&self, display: &mut Display,
-                  s: &str,
-                  x: i32, y: i32,
-                  scale: i32,
-                  color: Pixel) {
-        for (i, c) in s.chars().enumerate() {
-            self.render_char(
-                display,
-                c,
-                x + i as i32 * FONT_CHAR_WIDTH as i32 * scale, y,
-                scale,
-                color);
+    fn render(&self,
+              display: &mut Display,
+              font: &Font,
+              x: i32, y: i32,
+              scale: i32,
+              color: Pixel) {
+        if self.count < LABEL_CAPACITY {
+            for i in 0..self.count {
+                font.render_ascii(
+                    display,
+                    unsafe { *self.chars.get_unchecked(i) },
+                    x + i as i32 * FONT_CHAR_WIDTH as i32 * scale, y,
+                    scale,
+                    color);
+            }
+        }
+    }
+
+    fn clear(&mut self) {
+        self.count = 0;
+    }
+
+    fn push_byte(&mut self, b: u8) {
+        if self.count < LABEL_CAPACITY {
+            unsafe {
+                *self.chars.get_unchecked_mut(self.count) = b;
+            }
+            self.count += 1;
+        }
+    }
+
+    fn push_bytes(&mut self, bs: &[u8]) {
+        for b in bs {
+            self.push_byte(*b);
+        }
+    }
+
+    fn push_usize(&mut self, mut x: usize) {
+        let saved_count = self.count;
+
+        if x == 0 {
+            self.push_byte(b'0');
+        } else {
+            while x > 0 && self.count < LABEL_CAPACITY {
+                self.push_byte(x as u8 % 10 + b'0');
+                x /= 10;
+            }
+
+            if x > 0 {
+                // x does not fit into the Label rolling back and quitting
+                self.count = saved_count;
+                return;
+            }
+        }
+
+        let mut a = saved_count;
+        let mut b = self.count - 1;
+
+        while a < b {
+            unsafe {
+                let t = *self.chars.get_unchecked_mut(a);
+                *self.chars.get_unchecked_mut(a) =
+                    *self.chars.get_unchecked_mut(b);
+                *self.chars.get_unchecked_mut(b) = t;
+            }
+
+            a += 1;
+            b -= 1;
         }
     }
 }
@@ -321,6 +380,7 @@ pub struct State {
     enemy_spawn_cooldown: Seconds,
     pause: bool,
     score: usize,
+    label: Label,
 }
 
 impl State {
@@ -332,6 +392,7 @@ impl State {
             enemy_spawn_cooldown: 0.0,
             pause: false,
             score: 0,
+            label: Label::empty(),
         }
     }
 
@@ -382,6 +443,10 @@ impl State {
                 self.spawn_enemy(self.player.x, 0);
                 self.enemy_spawn_cooldown = ENEMY_SPAWN_PERIOD;
             }
+
+            self.label.clear();
+            self.label.push_bytes(b"Score: ");
+            self.label.push_usize(self.score);
         }
     }
 
@@ -396,10 +461,9 @@ impl State {
                 enemy.render(display, ENEMY_SIZE, ENEMY_COLOR)
             }
 
-           font.render_str(
-                display, "Hello, World",
-                0, 0, 4,
-                Pixel::rgba(255, 0, 0, 255));
+            self.label.render(display, font,
+                              0, 0, 4,
+                              Pixel::rgba(255, 0, 0, 255));
         }
     }
 
