@@ -37,6 +37,9 @@ const FONT_IMAGE_ROWS: usize = 7;
 const FONT_CHAR_WIDTH: usize = FONT_IMAGE_WIDTH / FONT_IMAGE_COLS;
 const FONT_CHAR_HEIGHT: usize = FONT_IMAGE_HEIGHT / FONT_IMAGE_ROWS;
 const BITS_IN_BYTE: usize = 8;
+const COPYRIGHT_TEXT: &[u8] = b"Made by Tsoding";
+const COPYRIGHT_SCALE: i32 = 2;
+const COPYRIGHT_PADDING: usize = 10;
 const COMPRESSED_FONT: [u8; 622] = [
     0x00, 0x11, 0x20, 0xa1, 0x41, 0x0c, 0x0e, 0x08, 0x08, 0x40, 0x00, 0x05, 0x38, 0x20, 0x00, 0x01,
     0x20, 0xa1, 0x43, 0xcc, 0x92, 0x08, 0x10, 0x21, 0x50, 0x80, 0x00, 0x02, 0x02, 0x44, 0x60, 0x00,
@@ -293,6 +296,22 @@ impl Font {
             self.render_ascii(display, '?' as u8, start_x, start_y, scale, color)
         }
     }
+
+    fn render_bytes(&self,
+                    display: &mut Display,
+                    bytes: &[u8],
+                    x: i32, y: i32,
+                    scale: i32,
+                    color: Pixel) {
+        for (i, byte) in bytes.iter().enumerate() {
+            self.render_ascii(
+                display,
+                *byte,
+                x + i as i32 * FONT_CHAR_WIDTH as i32 * scale, y,
+                scale,
+                color);
+        }
+    }
 }
 
 const LABEL_CAPACITY: usize = 64;
@@ -315,17 +334,9 @@ impl Label {
               x: i32, y: i32,
               scale: i32,
               color: Pixel) {
-        if self.count <= LABEL_CAPACITY {
-            for i in 0..self.count {
-                if let Some(c) = self.chars.get(i) {
-                    font.render_ascii(
-                        display,
-                        *c,
-                        x + i as i32 * FONT_CHAR_WIDTH as i32 * scale, y,
-                        scale,
-                        color);
-                }
-            }
+        if let Some(bytes) = self.chars.get(0..self.count) {
+            font.render_bytes(display, bytes, x - SHADOW_OFFSET, y - SHADOW_OFFSET, scale, SHADOW_COLOR);
+            font.render_bytes(display, bytes, x, y, scale, color);
         }
     }
 
@@ -378,7 +389,7 @@ pub struct State {
     enemy_spawn_cooldown: Seconds,
     pause: bool,
     score: usize,
-    label: Label,
+    score_label: Label,
     rng: Rng,
 }
 
@@ -391,7 +402,7 @@ impl State {
             enemy_spawn_cooldown: 0.0,
             pause: false,
             score: 0,
-            label: Label::empty(),
+            score_label: Label::empty(),
             rng: Rng::from_seed(123456789),
         }
     }
@@ -445,9 +456,9 @@ impl State {
                 self.enemy_spawn_cooldown = ENEMY_SPAWN_PERIOD;
             }
 
-            self.label.clear();
-            self.label.push_bytes(b"Score: ");
-            self.label.push_usize(self.score);
+            self.score_label.clear();
+            self.score_label.push_bytes(b"Score: ");
+            self.score_label.push_usize(self.score);
         }
     }
 
@@ -461,17 +472,29 @@ impl State {
             for enemy in self.enemies.iter() {
                 enemy.render(display, ENEMY_SIZE, ENEMY_COLOR)
             }
-
-            self.label.render(display, font,
-                              SCORE_LABEL_X - SHADOW_OFFSET,
-                              SCORE_LABEL_Y - SHADOW_OFFSET,
-                              4,
-                              SHADOW_COLOR);
-            self.label.render(display, font,
-                              SCORE_LABEL_X,
-                              SCORE_LABEL_Y,
-                              4,
-                              SCORE_LABEL_COLOR);
+            self.score_label.render(display, font,
+                                    SCORE_LABEL_X,
+                                    SCORE_LABEL_Y,
+                                    4,
+                                    SCORE_LABEL_COLOR);
+            {
+                let x = (DISPLAY_WIDTH  - FONT_CHAR_WIDTH * COPYRIGHT_SCALE as usize * COPYRIGHT_TEXT.len() - COPYRIGHT_PADDING) as i32;
+                let y = (DISPLAY_HEIGHT - FONT_CHAR_HEIGHT * COPYRIGHT_SCALE as usize - COPYRIGHT_PADDING) as i32;
+                font.render_bytes(
+                    display,
+                    COPYRIGHT_TEXT,
+                    x - SHADOW_OFFSET,
+                    y - SHADOW_OFFSET,
+                    COPYRIGHT_SCALE,
+                    SHADOW_COLOR);
+                font.render_bytes(
+                    display,
+                    COPYRIGHT_TEXT,
+                    x,
+                    y,
+                    COPYRIGHT_SCALE,
+                    SCORE_LABEL_COLOR);
+            }
         }
     }
 
@@ -570,8 +593,8 @@ extern "C" {
 }
 
 // TODO: spawn enemies completely outside of the screen
-// TODO: copyright at the bottom of the screen
 // TODO: player's health
 // TODO: game over sign
 // TODO: pause sign
 // TODO: increasing rate of spawning
+// TODO: Introduce Point and Style structs
