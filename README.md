@@ -2,6 +2,8 @@
 
 *Don't blame me if this code breaks in 1 year*
 
+![thumbnail](./thumbnail.png)
+
 The idea is to make a simple game in [Rust](https://www.rust-lang.org/) as bloat-free as possible using only `rustc` (not using [Emscripten](https://emscripten.org/), [wasm-bindgen](https://github.com/rustwasm/wasm-bindgen), etc.). This could be achieved by using [`wasm32-unknown-unknown`](https://doc.rust-lang.org/nightly/rustc/platform-support.html#tier-2) target directly and developing in [embedded style](https://docs.rust-embedded.org/embedonomicon/smallest-no-std.html).
 
 We still use a little bit of JavaScript to
