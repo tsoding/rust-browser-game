@@ -79,6 +79,25 @@ const COMPRESSED_FONT: [u8; 622] = [
     0x80, 0x00, 0x0c, 0x20, 0x20, 0x40, 0x80, 0x00, 0x0c, 0x7c, 0x10, 0x41, 0x00, 0xbd,
 ];
 
+const RNG_A: i32 = 1103515245;
+const RNG_C: i32 = 12345;
+
+struct Rng {
+    seed: i32,
+}
+
+impl Rng {
+    const fn from_seed(seed: i32) -> Self {
+        Self {seed}
+    }
+
+    fn rand(&mut self) -> i32 {
+        self.seed = RNG_A * self.seed + RNG_C;
+        self.seed
+    }
+}
+
+
 #[derive(Clone, Copy)]
 #[repr(C)]
 struct Pixel(u32);
@@ -357,6 +376,7 @@ pub struct State {
     pause: bool,
     score: usize,
     label: Label,
+    rng: Rng,
 }
 
 impl State {
@@ -369,6 +389,7 @@ impl State {
             pause: false,
             score: 0,
             label: Label::empty(),
+            rng: Rng::from_seed(123456789),
         }
     }
 
@@ -416,7 +437,8 @@ impl State {
 
             self.enemy_spawn_cooldown -= dt;
             if self.enemy_spawn_cooldown < 0.0 {
-                self.spawn_enemy(self.player.x, 0);
+                let enemy_x = self.rng.rand().abs() % DISPLAY_WIDTH as i32;
+                self.spawn_enemy(enemy_x, 0);
                 self.enemy_spawn_cooldown = ENEMY_SPAWN_PERIOD;
             }
 
@@ -543,3 +565,11 @@ extern "C" {
     fn js_sin(x: f32) -> f32;
     fn js_cos(x: f32) -> f32;
 }
+
+// TODO: spawn enemies completely outside of the screen
+// TODO: copyright at the bottom of the screen
+// TODO: player's health
+// TODO: shadows for all of the things
+// TODO: game over sign
+// TODO: pause sign
+// TODO: increasing rate of spawning
