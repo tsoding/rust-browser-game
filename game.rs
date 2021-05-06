@@ -412,7 +412,7 @@ impl State {
             for bullet in self.bullets.iter_mut() {
                 if bullet.alive {
                     bullet.y -= BULLET_SPEED;
-                    if bullet.y < 0 {
+                    if bullet.y - BULLET_SIZE / 2 < 0 {
                         bullet.alive = false
                     }
                 }
@@ -420,7 +420,7 @@ impl State {
             for enemy in self.enemies.iter_mut() {
                 if enemy.alive {
                     enemy.y += ENEMY_SPEED;
-                    if enemy.y > DISPLAY_HEIGHT as i32 {
+                    if enemy.y - ENEMY_SIZE / 2 > DISPLAY_HEIGHT as i32 {
                         enemy.alive = false
                     }
                 }
@@ -452,7 +452,7 @@ impl State {
             self.enemy_spawn_cooldown -= dt;
             if self.enemy_spawn_cooldown < 0.0 {
                 let enemy_x = self.rng.rand().abs() % DISPLAY_WIDTH as i32;
-                self.spawn_enemy(enemy_x, 0);
+                self.spawn_enemy(enemy_x, -ENEMY_SIZE / 2);
                 self.enemy_spawn_cooldown = ENEMY_SPAWN_PERIOD;
             }
 
@@ -592,7 +592,6 @@ extern "C" {
     fn js_cos(x: f32) -> f32;
 }
 
-// TODO: spawn enemies completely outside of the screen
 // TODO: player's health
 // TODO: game over sign
 // TODO: pause sign
