@@ -207,23 +207,30 @@ impl Font {
     fn decompress_from_bytes(&mut self, bytes: &[u8]) {
         let n = bytes.len();
         let mut i = 0;
-        let mut pixels_size = 0;
+        let mut pixels_size: usize = 0;
         while i < n {
-            let byte = unsafe {bytes.get_unchecked(i)};
-
-            if bytes[i] == 0x00 {
-                i += 1;
-                pixels_size += unsafe {*bytes.get_unchecked(i) as usize} * 8;
-                i += 1;
-            } else {
-                for bit_index in 0..BITS_IN_BYTE {
-                    unsafe {
-                        *self.pixels.get_unchecked_mut(pixels_size) =
-                            ((byte >> (BITS_IN_BYTE - bit_index - 1)) & 1) * 0xFF;
+            if let Some(byte) = bytes.get(i).cloned() {
+                if byte == 0x00 {
+                    i += 1;
+                    if let Some(next_byte) = bytes.get(i).cloned() {
+                        pixels_size += next_byte as usize * 8;
+                    } else {
+                        break;
                     }
-                    pixels_size += 1;
+                    i += 1;
+                } else {
+                    for bit_index in 0..BITS_IN_BYTE {
+                        if let Some(pixel_ref) = self.pixels.get_mut(pixels_size) {
+                            *pixel_ref = ((byte >> (BITS_IN_BYTE - bit_index - 1)) & 1) * 0xFF;
+                        } else {
+                            break;
+                        }
+                        pixels_size += 1;
+                    }
+                    i += 1;
                 }
-                i += 1;
+            } else {
+                break;
             }
         }
     }
