@@ -9,6 +9,7 @@ async function start() {
         });
     const memoryView = new Uint8Array(game.instance.exports.memory.buffer);
 
+    game.instance.exports.init();
     const displayAddr = game.instance.exports.get_display();
     const displayWidth = game.instance.exports.get_display_width();
     const displayHeight = game.instance.exports.get_display_height();
