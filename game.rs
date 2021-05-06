@@ -335,7 +335,7 @@ impl Label {
             }
         }
 
-        if let Some(chars) = self.chars.get_mut(saved_count .. self.count - 1) {
+        if let Some(chars) = self.chars.get_mut(saved_count .. self.count) {
             chars.reverse();
         }
     }
