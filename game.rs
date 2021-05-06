@@ -344,7 +344,7 @@ impl Label {
             self.push_byte(b'0');
         } else {
             while x > 0 && self.count < LABEL_CAPACITY {
-                self.push_byte(x as u8 % 10 + b'0');
+                self.push_byte((x % 10) as u8 + b'0');
                 x /= 10;
             }
 
