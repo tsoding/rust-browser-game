@@ -134,7 +134,9 @@ impl Display {
     fn fill(&mut self, pixel: Pixel) {
         for y in 0..DISPLAY_HEIGHT {
             for x in 0..DISPLAY_WIDTH {
-                self.pixels[y * DISPLAY_WIDTH + x] = pixel;
+                unsafe {
+                    *self.pixels.get_unchecked_mut(y * DISPLAY_WIDTH + x) = pixel;
+                }
             }
         }
     }
@@ -156,7 +158,9 @@ impl Display {
 
     fn put(&mut self, x: i32, y: i32, pixel: Pixel) {
         if 0 <= x && x < DISPLAY_WIDTH as i32 && 0 <= y && y < DISPLAY_HEIGHT as i32 {
-            self.pixels[y as usize * DISPLAY_WIDTH + x as usize] = pixel;
+            unsafe {
+                *self.pixels.get_unchecked_mut(y as usize * DISPLAY_WIDTH + x as usize) = pixel;
+            }
         }
     }
 }
@@ -230,15 +234,19 @@ impl Font {
         for chunk_index in 0..CHUNK_COUNT {
             let chunk = chunks[chunk_index as usize];
             for bit_index in 0..CHUNK_SIZE {
-                self.pixels[chunk_index * CHUNK_SIZE + bit_index] =
-                    ((chunk >> (CHUNK_SIZE - bit_index - 1)) & 1) * 0xFF;
+                unsafe {
+                    *self.pixels.get_unchecked_mut(chunk_index * CHUNK_SIZE + bit_index) =
+                        ((chunk >> (CHUNK_SIZE - bit_index - 1)) & 1) * 0xFF;
+                }
             }
         }
     }
 
     fn get(&self, x: i32, y: i32) -> Option<&u8> {
         if 0 <= x && x < FONT_IMAGE_WIDTH as i32 && 0 <= y && y < FONT_IMAGE_HEIGHT as i32 {
-            Some(&self.pixels[y as usize * FONT_IMAGE_WIDTH + x as usize])
+            unsafe {
+                Some(self.pixels.get_unchecked(y as usize * FONT_IMAGE_WIDTH + x as usize))
+            }
         } else {
             None
         }
@@ -277,18 +285,31 @@ impl Font {
         }
     }
 
-    fn render_char(&self, display: &mut Display, c: char,
+    fn render_char(&self, display: &mut Display,
+                   c: char,
                    x: i32, y: i32,
                    scale: i32,
                    color: Pixel) {
         if c.is_ascii() {
-            self.render_ascii(display, c as u8, x, y, scale, color)
+            self.render_ascii(display, c as u8, x, y, scale, color);
         } else {
-            self.render_ascii(display, '?' as u8, x, y, scale, color)
+            self.render_ascii(display, '?' as u8, x, y, scale, color);
         }
     }
 
-    fn render_str(&self, display: &mut Display, s: &str) {
+    fn render_str(&self, display: &mut Display,
+                  s: &str,
+                  x: i32, y: i32,
+                  scale: i32,
+                  color: Pixel) {
+        for (i, c) in s.chars().enumerate() {
+            self.render_char(
+                display,
+                c,
+                x + i as i32 * FONT_CHAR_WIDTH as i32 * scale, y,
+                scale,
+                color);
+        }
     }
 }
 
@@ -375,9 +396,9 @@ impl State {
                 enemy.render(display, ENEMY_SIZE, ENEMY_COLOR)
             }
 
-            font.render_char(
-                display, 'e',
-                0, 0, 16,
+           font.render_str(
+                display, "Hello, World",
+                0, 0, 4,
                 Pixel::rgba(255, 0, 0, 255));
         }
     }
