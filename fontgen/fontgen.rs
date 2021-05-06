@@ -12,6 +12,47 @@ extern "C" {
                  req_comp: i32) -> *mut c_uchar;
 }
 
+fn compress_bytes_with_custom_rle(bytes: &[u8]) -> Vec<u8> {
+    let mut result = Vec::<_>::new();
+
+    let n = bytes.len();
+    let mut i = 0;
+
+    while i < n {
+        result.push(bytes[i]);
+
+        if bytes[i] == 0x00 {
+            i += 1;
+            let mut count: u8 = 1;
+            while i < n && bytes[i] == 0x00 && count < 255 {
+                i += 1;
+                count += 1;
+            }
+            result.push(count);
+        } else {
+            i += 1;
+        }
+    }
+
+    result
+}
+
+fn pretty_print_bytes_as_array(bytes: &[u8], row_size: usize, name: &str) {
+    let row_count: usize = (bytes.len() + row_size - 1) / row_size;
+    println!("const {}: [u8; {}] = [", name, bytes.len());
+    for row in 0..row_count {
+        print!("    ");
+        for col in 0..row_size {
+            let index = row * row_size + col;
+            if index < bytes.len() {
+                print!("{:#04x}, ", bytes[row * row_size + col]);
+            }
+        }
+        println!("");
+    }
+    println!("];");
+}
+
 fn main() {
     const IMAGE_WIDTH: i32 = 128;
     const IMAGE_HEIGHT: i32 = 64;
@@ -51,17 +92,8 @@ fn main() {
         }
     }
 
-    const ROW_SIZE: usize = 16;
-    const ROW_COUNT: usize = CHUNK_COUNT as usize / ROW_SIZE;
+    let compressed_bytes = compress_bytes_with_custom_rle(&chunks);
     println!("// Copy-paste this into your code");
     println!("// Generated from `{}`", FILE_PATH);
-    println!("const COMPRESSED_FONT: [u8; {}] = [", CHUNK_COUNT);
-    for row in 0..ROW_COUNT {
-        print!("    ");
-        for col in 0..ROW_SIZE {
-            print!("{:#04x}, ", chunks[row * ROW_SIZE + col]);
-        }
-        println!("");
-    }
-    println!("];");
+    pretty_print_bytes_as_array(&compressed_bytes, 16, "COMPRESSED_FONT");
 }
