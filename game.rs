@@ -20,6 +20,9 @@ const BULLET_COLOR: Pixel = Pixel::rgba(0xEC, 0xB3, 0xB3, 0xFF);
 const ENEMY_SIZE: i32 = 100;
 const ENEMY_COLOR: Pixel = Pixel::rgba(0x7C, 0xB8, 0xBB, 0xFF);
 const ENEMY_SPEED: i32 = 5;
+const SCORE_LABEL_COLOR: Pixel = Pixel::rgba(0xDC, 0xDC, 0xCC, 0xFF);
+const TEXT_SHADOW_COLOR: Pixel = Pixel::rgba(0, 0, 0, 0xFF);
+const TEXT_SHADOW_OFFSET: i32 = 3;
 const BULLETS_CAPACITY: usize = 5;
 const ENEMIES_CAPACITY: usize = 10;
 const ENEMY_SPAWN_PERIOD: Seconds = 1.0;
@@ -463,7 +466,10 @@ impl State {
 
             self.label.render(display, font,
                               0, 0, 4,
-                              Pixel::rgba(255, 0, 0, 255));
+                              TEXT_SHADOW_COLOR);
+            self.label.render(display, font,
+                              TEXT_SHADOW_OFFSET, TEXT_SHADOW_OFFSET, 4,
+                              SCORE_LABEL_COLOR);
         }
     }
 
