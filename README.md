@@ -17,6 +17,10 @@ We still use a little bit of JavaScript to
 
 The entire logic of the game is contained within the `game.wasm` module that renders the frames of the game into its own memory. The JavaScript part of the applications (`index.js`) constantly takes those frames directly from the memory, puts them into [ImageData](https://developer.mozilla.org/en-US/docs/Web/API/ImageData) and displays them on the [HTML5 Canvas](https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API).
 
+## Bitmap Font
+
+The embedded bitmap font was compressed with [domsson-fontgen](https://github.com/tsoding/domsson-fontgen).
+
 ## Running the Game locally
 
 Building step is optional. The compiled version of the game (`game.wasm`) is committed into the repo just in case you wanna quickly check the game without wrestling with the Rust compiler.
