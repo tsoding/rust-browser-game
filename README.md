@@ -21,6 +21,12 @@ The entire logic of the game is contained within the `game.wasm` module that ren
 
 The embedded bitmap font was compressed with [domsson-fontgen](https://github.com/tsoding/domsson-fontgen).
 
+## Portability
+
+The game is extremely portable. Here are some of the existing alternative "frontends" for it:
+- [rust-browser-game-but-sdl](https://github.com/tsoding/rust-browser-game-but-sdl)
+- rust-browser-game-but-ncurses (in progress)
+
 ## Running the Game locally
 
 Building step is optional. The compiled version of the game (`game.wasm`) is committed into the repo just in case you wanna quickly check the game without wrestling with the Rust compiler.
