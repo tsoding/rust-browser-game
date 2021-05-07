@@ -31,7 +31,7 @@ The game is extremely portable. Here are some of the existing alternative "front
 
 Building step is optional. The compiled version of the game (`game.wasm`) is committed into the repo just in case you wanna quickly check the game without wrestling with the Rust compiler.
 
-1. Start an HTTP Server (for example Python's SimpleHTTPServer):
+1. Start an HTTP Server (for example Python's Simple HTTP Server):
 
 ```console
 $ python3 -m http.server 6969
