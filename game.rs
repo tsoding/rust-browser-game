@@ -417,17 +417,20 @@ impl State {
                     }
                 }
             }
-            for enemy in self.enemies.iter_mut() {
-                if enemy.alive {
-                    enemy.y += ENEMY_SPEED;
-                    if enemy.y - ENEMY_SIZE / 2 > DISPLAY_HEIGHT as i32 {
-                        enemy.alive = false
-                    }
-                }
-            }
 
             for enemy in self.enemies.iter_mut() {
                 if enemy.alive {
+                    // Update Enemy's position and despawn it if it
+                    // went outside of the screen
+                    {
+                        enemy.y += ENEMY_SPEED;
+                        if enemy.y - ENEMY_SIZE / 2 > DISPLAY_HEIGHT as i32 {
+                            enemy.alive = false
+                        }
+                    }
+
+                    // Check if any bullets killed the enemy by
+                    // overlaping with it
                     for bullet in self.bullets.iter_mut() {
                         if bullet.alive {
                             if enemy.overlaps(ENEMY_SIZE, bullet, BULLET_SIZE) {
@@ -440,9 +443,11 @@ impl State {
                     }
                 }
 
-                // Enemy could be killed by the bullet in the previous
+                // Enemy could be killed by a bullet in the previous
                 // condition. So we need to check if it's alive again.
                 if enemy.alive {
+                    // Check if any enemy killed the player by
+                    // overlaping with them.
                     if enemy.overlaps(ENEMY_SIZE, &self.player, PLAYER_SIZE) {
                         self.player.alive = false;
                     }
