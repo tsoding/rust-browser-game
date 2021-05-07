@@ -34,7 +34,7 @@ Building step is optional. The compiled version of the game (`game.wasm`) is com
 1. Start an HTTP Server (for example Python's SimpleHTTPServer):
 
 ```console
-$ python -m SimpleHTTPServer 6969
+$ python3 -m http.server 6969
 ```
 
 2. Play the game
