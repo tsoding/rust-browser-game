@@ -26,6 +26,7 @@ The embedded bitmap font was compressed with [domsson-fontgen](https://github.co
 The game is extremely portable. Here are some of the existing alternative "frontends" for it:
 - [rust-browser-game-but-sdl](https://github.com/tsoding/rust-browser-game-but-sdl)
 - [rust-browser-game-but-ncurses](https://github.com/tsoding/rust-browser-game-but-ncurses)
+- [rust-browser-game-but-uefi](https://github.com/bit9tream/rust-browser-game-but-uefi) (by [@bit9tream](https://github.com/bit9tream))
 
 ## Running the Game locally
 
