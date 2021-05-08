@@ -15,11 +15,11 @@ const PLAYER_SIZE: i32 = 80;
 const PLAYER_COLOR: Pixel = Pixel::rgba(0xDF, 0xAF, 0x8F, 0xFF);
 const PLAYER_KILL_REWARD: usize = 100;
 const BULLET_SIZE: i32 = 25;
-const BULLET_SPEED: i32 = 20;
+const BULLET_SPEED: i32 = DISPLAY_HEIGHT as i32 * 2;
 const BULLET_COLOR: Pixel = Pixel::rgba(0xEC, 0xB3, 0xB3, 0xFF);
 const ENEMY_SIZE: i32 = 100;
 const ENEMY_COLOR: Pixel = Pixel::rgba(0x7C, 0xB8, 0xBB, 0xFF);
-const ENEMY_SPEED: i32 = 5;
+const ENEMY_SPEED: i32 = DISPLAY_HEIGHT as i32 / 2;
 const SCORE_LABEL_COLOR: Pixel = Pixel::rgba(0xDC, 0xDC, 0xCC, 0xFF);
 const SCORE_LABEL_PADDING: i32 = 17;
 const SCORE_LABEL_X: i32 = SCORE_LABEL_PADDING;
@@ -411,7 +411,7 @@ impl State {
         if !self.pause {
             for bullet in self.bullets.iter_mut() {
                 if bullet.alive {
-                    bullet.y -= BULLET_SPEED;
+                    bullet.y -= (BULLET_SPEED as f32 * dt) as i32;
                     if bullet.y - BULLET_SIZE / 2 < 0 {
                         bullet.alive = false
                     }
@@ -423,7 +423,7 @@ impl State {
                     // Update Enemy's position and despawn it if it
                     // went outside of the screen
                     {
-                        enemy.y += ENEMY_SPEED;
+                        enemy.y += (ENEMY_SPEED as f32 * dt) as i32;
                         if enemy.y - ENEMY_SIZE / 2 > DISPLAY_HEIGHT as i32 {
                             enemy.alive = false
                         }
@@ -551,43 +551,43 @@ static mut DISPLAY: Display = Display {
 
 
 #[no_mangle]
-pub unsafe fn init() {
+pub unsafe extern "C" fn init() {
     FONT.decompress_from_bytes(&COMPRESSED_FONT);
 }
 
 #[no_mangle]
-pub fn get_display_width() -> usize {
+pub extern "C" fn get_display_width() -> usize {
     DISPLAY_WIDTH
 }
 
 #[no_mangle]
-pub fn get_display_height() -> usize {
+pub extern "C" fn get_display_height() -> usize {
     DISPLAY_HEIGHT
 }
 
 #[no_mangle]
-pub unsafe fn get_display() -> &'static mut Display {
+pub unsafe extern "C" fn get_display() -> &'static mut Display {
     &mut DISPLAY
 }
 
 #[no_mangle]
-pub unsafe fn next_frame(dt: Seconds) {
+pub unsafe extern "C" fn next_frame(dt: Seconds) {
     STATE.update(dt);
     STATE.render(&mut DISPLAY, &FONT);
 }
 
 #[no_mangle]
-pub unsafe fn mouse_move(x: i32, y: i32) {
+pub unsafe extern "C" fn mouse_move(x: i32, y: i32) {
     STATE.mouse_move(x, y);
 }
 
 #[no_mangle]
-pub unsafe fn mouse_click() {
+pub unsafe extern "C" fn mouse_click() {
     STATE.mouse_click();
 }
 
 #[no_mangle]
-pub unsafe fn toggle_pause() {
+pub unsafe extern "C" fn toggle_pause() {
     STATE.toggle_pause();
 }
 
